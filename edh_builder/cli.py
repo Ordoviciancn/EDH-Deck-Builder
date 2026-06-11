@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -97,7 +98,11 @@ def main() -> None:
         repo = CardRepository()
         total = 0.0
         missing = []
-        for line in Path(args.path).read_text(encoding="utf-8-sig").splitlines():
+        text = Path(args.path).read_text(encoding="utf-8-sig")
+        if args.path.lower().endswith(".json"):
+            payload = json.loads(text)
+            text = payload.get("decklist", text)
+        for line in text.splitlines():
             line = line.strip()
             if not line or not line[0].isdigit():
                 continue

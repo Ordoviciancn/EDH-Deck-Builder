@@ -202,7 +202,7 @@ class EdhDeckBuilder:
             targets["tutor"] = max(targets["tutor"], 2)
         elif request.combo_preference == "focused":
             targets["combo_piece"] = 7
-            targets["tutor"] = max(targets["tutor"], 4)
+            targets["tutor"] = max(targets["tutor"], 2)
             targets["protection"] += 1
 
         profile = request.meta_profile
@@ -248,10 +248,11 @@ class EdhDeckBuilder:
         tagged = []
         for card in candidates:
             tags = tag_card(card, self.tag_rules)
+            threshold = self._role_threshold(role)
             if (
                 (role in tags and role not in {"draw", "wipe", "tutor", "protection"})
                 or card.name in self.staples.get(role, [])
-                or self._role_fit_score(card, role, tags) >= 10
+                or self._role_fit_score(card, role, tags) >= threshold
                 or (role in {"synergy", "combo_piece", "wincon"} and tags & desired_tags)
             ):
                 tagged.append(card)
@@ -343,12 +344,18 @@ class EdhDeckBuilder:
         elif role == "tutor":
             if "named " in text:
                 score -= 18
-            if "search your library" in text and not any(term in text for term in ["basic land", "land card", "desert card", "forest card", "island card"]):
+            if (
+                "search your library" in text
+                and any(term in text for term in ["instant", "sorcery", "artifact", "creature card", "card"])
+                and not any(term in text for term in ["basic land", "land card", "desert card", "forest card", "island card"])
+            ):
                 score += 16
             if "transmute" in text:
                 score += 12
             if any(term in text for term in ["basic land", "land card", "desert card", "forest card", "island card"]):
                 score -= 16
+            if "from outside the game" in text or "you own from outside the game" in text:
+                score -= 12
         elif role == "combo_piece":
             if card.name in self.staples["combo_piece"]:
                 score += 25
@@ -411,11 +418,27 @@ class EdhDeckBuilder:
             score += 10
         if "enters tapped" in text:
             score -= 4
+        if any(phrase in text for phrase in ["spend this mana only", "among legendary", "time lord", "historic card", "dragon creature"]):
+            score -= 18
+        if "{1}, {t}: add one mana" in text or "{2}, {t}: add one mana" in text:
+            score -= 10
         if not card.color_identity and card.name not in {"Command Tower", "Exotic Orchard", "Reliquary Tower", "Myriad Landscape"}:
             score -= 8
         if not any(phrase in text for phrase in ["add {u}", "add {g}", "mana of any color", "add one mana"]) and card.name not in self.staples["lands"]:
             score -= 18
         return score
+
+    @staticmethod
+    def _role_threshold(role: str) -> float:
+        if role == "wipe":
+            return 18
+        if role == "tutor":
+            return 20
+        if role == "protection":
+            return 13
+        if role == "draw":
+            return 12
+        return 10
 
     def _meta_desired_tags(self, request: BuildRequest) -> set[str]:
         tags: set[str] = set()
