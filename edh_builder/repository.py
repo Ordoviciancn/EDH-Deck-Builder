@@ -12,6 +12,7 @@ def _set(value: str | None) -> set[str]:
 
 
 def row_to_card(row: sqlite3.Row) -> Card:
+    raw = json.loads(row["raw_json"] or "{}")
     return Card(
         oracle_id=row["oracle_id"],
         name=row["name"],
@@ -27,6 +28,13 @@ def row_to_card(row: sqlite3.Row) -> Card:
         price_usd=row["price_usd"],
         scryfall_uri=row["scryfall_uri"] or "",
         image_uri=row["image_uri"] or "",
+        edhrec_rank=raw.get("edhrec_rank"),
+        games=tuple(raw.get("games") or ()),
+        set_code=raw.get("set", ""),
+        set_name=raw.get("set_name", ""),
+        layout=raw.get("layout", ""),
+        border_color=raw.get("border_color", ""),
+        digital=bool(raw.get("digital")),
     )
 
 
@@ -59,11 +67,12 @@ class CardRepository:
                 """
             ).fetchall()
         cards = [row_to_card(row) for row in rows]
+        max_single = _max_single_card_price(budget)
         pool = [
             card
             for card in cards
             if card.color_identity.issubset(color_identity)
-            and (budget is None or card.price_usd is None or card.price_usd <= max(budget, 1))
+            and (max_single is None or card.price_usd is None or card.price_usd <= max_single)
         ]
         return pool
 
@@ -219,3 +228,15 @@ def _identity_from_tags(tags: tuple[str, ...]) -> set[str]:
         if tag.startswith("identity:"):
             return set(tag.split(":", 1)[1])
     return set()
+
+
+def _max_single_card_price(budget: float | None) -> float | None:
+    if budget is None:
+        return None
+    if budget <= 60:
+        return max(5.0, budget * 0.12)
+    if budget <= 150:
+        return max(10.0, budget * 0.18)
+    if budget <= 500:
+        return budget * 0.22
+    return budget

@@ -7,7 +7,7 @@
 - 从 Scryfall Bulk Data 获取全卡 Oracle 数据，并写入本地 SQLite。
 - 基于 Scryfall `legalities.commander` 获取 Commander 禁用/合法状态。
 - 校验 EDH 基础规则：100 张、singleton、颜色认同、Commander 合法性、禁卡。
-- 通过本地标签规则识别 ramp、draw、removal、wipe、tutor、combo、wincon 等角色。
+- 通过 EDHREC 排名、本地常用牌清单、角色规则和主题协同综合评分。
 - 接入公开 combo 和自创 combo 的统一 JSONL 存储。
 - 提供 LLM 智能体接口：有 API key 时让 LLM 生成构筑计划；无 key 时使用启发式构筑。
 - 提供 CLI 和 FastAPI 入口。
@@ -65,6 +65,12 @@ python -m edh_builder.cli import-spellbook-file ".cache\spellbook-variants.json"
 
 ```powershell
 python -m edh_builder.cli search-combos --identity GU --theme "storm mana" --limit 10
+```
+
+估算 decklist 当前已知美元价格：
+
+```powershell
+python -m edh_builder.cli estimate-deck ".cache\last-deck.txt"
 ```
 
 自创 combo 或其他公开来源也可以使用统一 JSONL 格式：

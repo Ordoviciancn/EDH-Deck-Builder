@@ -22,6 +22,13 @@ class Card:
     price_usd: float | None = None
     scryfall_uri: str = ""
     image_uri: str = ""
+    edhrec_rank: int | None = None
+    games: tuple[str, ...] = ()
+    set_code: str = ""
+    set_name: str = ""
+    layout: str = ""
+    border_color: str = ""
+    digital: bool = False
 
     @property
     def is_basic_land(self) -> bool:

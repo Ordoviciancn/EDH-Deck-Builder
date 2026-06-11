@@ -40,6 +40,8 @@ def main() -> None:
     combo_search.add_argument("--identity", default="")
     combo_search.add_argument("--theme", default="")
     combo_search.add_argument("--limit", type=int, default=10)
+    estimate = sub.add_parser("estimate-deck")
+    estimate.add_argument("path")
 
     build = sub.add_parser("build")
     build.add_argument("--commander", required=True)
@@ -80,6 +82,25 @@ def main() -> None:
             print("  Cards: " + ", ".join(combo.cards))
             print("  Result: " + combo.result)
             print("  Tags: " + ", ".join(combo.tags[:8]))
+    elif args.command == "estimate-deck":
+        repo = CardRepository()
+        total = 0.0
+        missing = []
+        for line in Path(args.path).read_text(encoding="utf-8-sig").splitlines():
+            line = line.strip()
+            if not line or not line[0].isdigit():
+                continue
+            _, name = line.split(" ", 1)
+            card = repo.get_by_name(name.strip())
+            if card and card.price_usd is not None:
+                total += card.price_usd
+            else:
+                missing.append(name.strip())
+        print(f"Known USD total: {total:.2f}")
+        if missing:
+            print("Missing prices:")
+            for name in missing:
+                print(f"- {name}")
     elif args.command == "build":
         request = BuildRequest(
             commander=args.commander,

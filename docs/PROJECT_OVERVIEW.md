@@ -103,6 +103,15 @@ python -m edh_builder.cli search-combos --identity GU --theme "storm mana" --lim
   -> 输出 Markdown 或可导入 decklist
 ```
 
+评分器会综合考虑：
+
+- EDHREC 排名：优先真实 Commander 使用率高的牌。
+- 角色适配：ramp、draw、removal、wipe、protection、tutor、combo、wincon 分别有独立判断。
+- 常用牌清单：`data/edh_staples.json` 存放成熟 EDH 构筑常见核心牌。
+- 主将协同：例如倾曳主将会提高高费瞬间/法术、delve、storm、cascade 牌的权重。
+- 预算压力：低预算构筑会惩罚高价牌，并避免公开 combo 组件绕过预算限制。
+- 地牌质量：优先多色地、功能地和合理数量的基本地，避免只因文本关键词塞入低质量地。
+
 角色配额位于：
 
 ```text
@@ -232,7 +241,7 @@ edh_builder.sqlite3
 
 ## 当前限制
 
-- 构筑评分仍是启发式，尚未接入真实对局数据。
+- 构筑评分已加入 EDHREC 排名和预算压力，但仍是启发式，尚未接入真实对局数据。
 - 已支持 Commander Spellbook bulk JSON 导入，但还没有做增量同步和 UI 展示。
 - 尚未区分纸质牌、Arena 数字专属、Universes Beyond、银边/acorn 等用户偏好过滤。
 - 尚未实现细粒度预算优化，例如按总价动态替换。
