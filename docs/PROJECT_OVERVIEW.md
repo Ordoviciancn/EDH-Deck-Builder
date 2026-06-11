@@ -292,3 +292,31 @@ edh_builder.sqlite3
 5. 增加导出格式：Moxfield、Archidekt、MTGO、纯 Markdown。
 6. 为 FastAPI 增加前端页面或 Swagger 工作流示例。
 7. 增加更多规则测试：partner、background、basic land 例外、特殊指挥官文本。
+
+## Rules Knowledge for LLM
+
+LLM planning now receives a curated rules context from:
+
+```text
+data/rules_knowledge.md
+```
+
+The context covers Commander deck construction, color identity, cascade, free casting, spell copies, combo validation, interaction categories, and meta-aware deckbuilding. It is loaded through:
+
+```text
+edh_builder/rules_knowledge.py
+```
+
+The loader trims sections according to the commander and theme. For example, a Quandrix/cascade request receives the Cascade and Quandrix-specific sections in addition to general Commander and combo rules.
+
+Preview from CLI:
+
+```powershell
+python -m edh_builder.cli rules-context --commander "Quandrix, the Proof" --theme "cascade storm combo"
+```
+
+Preview from API:
+
+```text
+POST /rules/context
+```

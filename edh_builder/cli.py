@@ -11,6 +11,7 @@ from .exporters import to_grouped_markdown, to_plain_text
 from .models import BuildRequest
 from .repository import CardRepository
 from .repository import ComboRepository
+from .rules_knowledge import rules_context_for
 from .scryfall import import_oracle_cards, sync_oracle_cards
 
 
@@ -42,6 +43,12 @@ def main() -> None:
     combo_search.add_argument("--limit", type=int, default=10)
     estimate = sub.add_parser("estimate-deck")
     estimate.add_argument("path")
+    rules = sub.add_parser("rules-context")
+    rules.add_argument("--commander", required=True)
+    rules.add_argument("--theme", default="")
+    rules.add_argument("--combo-preference", default="balanced", choices=["none", "light", "balanced", "focused"])
+    rules.add_argument("--meta-profile", default="balanced", choices=["balanced", "creature", "combo", "control", "graveyard", "artifact", "stax"])
+    rules.add_argument("--meta-notes", default="")
 
     build = sub.add_parser("build")
     build.add_argument("--commander", required=True)
@@ -105,6 +112,18 @@ def main() -> None:
             print("Missing prices:")
             for name in missing:
                 print(f"- {name}")
+    elif args.command == "rules-context":
+        commander = CardRepository().get_by_name(args.commander)
+        if not commander:
+            raise SystemExit(f"Commander not found: {args.commander}")
+        request = BuildRequest(
+            commander=args.commander,
+            theme=args.theme,
+            combo_preference=args.combo_preference,
+            meta_profile=args.meta_profile,
+            meta_notes=args.meta_notes,
+        )
+        print(rules_context_for(request, commander))
     elif args.command == "build":
         request = BuildRequest(
             commander=args.commander,

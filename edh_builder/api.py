@@ -7,6 +7,7 @@ from .deck_builder import DeckBuildError, EdhDeckBuilder
 from .exporters import to_grouped_markdown, to_plain_text
 from .models import BuildRequest
 from .repository import CardRepository
+from .rules_knowledge import rules_context_for
 
 
 app = FastAPI(title="EDH Builder Agent", version="0.1.0")
@@ -34,6 +35,15 @@ def health() -> dict:
 def search_cards(q: str, limit: int = 20) -> dict:
     cards = CardRepository().search(q, limit)
     return {"cards": [card.__dict__ | {"colors": sorted(card.colors), "color_identity": sorted(card.color_identity)} for card in cards]}
+
+
+@app.post("/rules/context")
+def rules_context(payload: BuildPayload) -> dict:
+    commander = CardRepository().get_by_name(payload.commander)
+    if not commander:
+        raise HTTPException(status_code=400, detail=f"Commander not found: {payload.commander}")
+    request = BuildRequest(**payload.model_dump())
+    return {"commander": commander.name, "rules_context": rules_context_for(request, commander)}
 
 
 @app.post("/decks/build")

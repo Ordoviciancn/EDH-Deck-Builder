@@ -6,6 +6,7 @@ import urllib.request
 
 from .config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
 from .models import BuildRequest, Card, Combo
+from .rules_knowledge import rules_context_for
 
 
 def propose_plan(request: BuildRequest, commander: Card, combos: list[Combo]) -> dict:
@@ -18,12 +19,16 @@ def propose_plan(request: BuildRequest, commander: Card, combos: list[Combo]) ->
     ]
     prompt = {
         "task": "Create an EDH deck construction plan. Return strict JSON.",
+        "rules_context": rules_context_for(request, commander),
         "commander": commander.name,
         "commander_text": commander.oracle_text,
         "theme": request.theme,
         "budget": request.budget,
         "power_level": request.power_level,
         "allow_infinite": request.allow_infinite,
+        "combo_preference": request.combo_preference,
+        "meta_profile": request.meta_profile,
+        "meta_notes": request.meta_notes,
         "must_include": request.must_include,
         "avoid": request.avoid,
         "available_combo_context": combo_lines,
@@ -41,7 +46,11 @@ def propose_plan(request: BuildRequest, commander: Card, combos: list[Combo]) ->
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are an expert Magic: The Gathering Commander deckbuilding agent. Output only valid JSON.",
+                    "content": (
+                        "You are an expert Magic: The Gathering Commander deckbuilding agent. "
+                        "Use the supplied rules_context as authoritative planning guidance. "
+                        "Do not invent rules, do not include off-color or banned cards, and output only valid JSON."
+                    ),
                 },
                 {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
             ],

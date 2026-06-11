@@ -92,3 +92,23 @@ python -m edh_builder.cli estimate-deck ".cache\last-deck.txt"
 - Scryfall Card Objects: https://scryfall.com/docs/api/cards
 - Commander Rules: https://mtgcommander.net/index.php/rules/
 - Commander Spellbook: https://commanderspellbook.com/about/
+
+## Rules Knowledge
+
+The LLM planner receives a local rules context from `data/rules_knowledge.md`.
+It summarizes Commander deck construction, color identity, cascade, free casting,
+spell copies, combo validation, interaction categories, and meta-aware deckbuilding
+guardrails. The source links inside the file point to the current official rules
+pages and Scryfall data.
+
+Preview the context used for a commander:
+
+```powershell
+python -m edh_builder.cli rules-context --commander "Quandrix, the Proof" --theme "cascade storm combo"
+```
+
+The API also exposes:
+
+```text
+POST /rules/context
+```
