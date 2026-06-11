@@ -10,6 +10,8 @@
 - 通过 EDHREC 排名、本地常用牌清单、角色规则和主题协同综合评分。
 - 接入公开 combo 和自创 combo 的统一 JSONL 存储。
 - 提供 LLM 智能体接口：有 API key 时让 LLM 生成构筑计划；无 key 时使用启发式构筑。
+- 支持 combo 体系化：从公开 combo 中选择组件，并补充导师、保护和 payoff。
+- 支持 meta 定制：creature/combo/control/graveyard/artifact/stax 等环境会改变配额和评分。
 - 提供 CLI 和 FastAPI 入口。
 
 ## 快速开始
@@ -27,6 +29,9 @@ python -m edh_builder.cli search "Muldrotha, the Gravetide"
 
 # 构筑一套 EDH 套牌
 python -m edh_builder.cli build --commander "Muldrotha, the Gravetide" --theme "graveyard value recursion" --budget 300
+
+# 交互式构筑向导，会逐步询问预算、强度、combo 偏好和 meta
+python -m edh_builder.cli wizard
 ```
 
 启动 API：

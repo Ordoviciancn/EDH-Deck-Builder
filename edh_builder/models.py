@@ -55,6 +55,9 @@ class BuildRequest:
     budget: float | None = None
     power_level: int = 6
     allow_infinite: bool = True
+    combo_preference: str = "balanced"
+    meta_profile: str = "balanced"
+    meta_notes: str = ""
     must_include: list[str] = field(default_factory=list)
     avoid: list[str] = field(default_factory=list)
 
@@ -74,3 +77,14 @@ class Deck:
 
     def names(self) -> list[str]:
         return [self.commander.name] + [entry.card.name for entry in self.cards]
+
+
+@dataclass(frozen=True)
+class ComboPackage:
+    name: str
+    components: tuple[str, ...]
+    result: str
+    tutors: tuple[str, ...] = ()
+    protection: tuple[str, ...] = ()
+    payoffs: tuple[str, ...] = ()
+    notes: str = ""

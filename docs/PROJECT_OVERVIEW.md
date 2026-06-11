@@ -97,6 +97,8 @@ python -m edh_builder.cli search-combos --identity GU --theme "storm mana" --lim
   -> 从本地 Scryfall SQLite 读取主将
   -> 按 Commander 合法性、颜色认同、预算过滤全卡池
   -> 按主将颜色认同与主题读取 combo 知识库
+  -> 选择 combo package：组件、导师、保护、payoff
+  -> 根据用户 meta 调整角色配额和评分
   -> LLM 或本地启发式生成构筑计划
   -> 按角色配额选择卡牌
   -> 执行 EDH 合法性校验
@@ -111,6 +113,40 @@ python -m edh_builder.cli search-combos --identity GU --theme "storm mana" --lim
 - 主将协同：例如倾曳主将会提高高费瞬间/法术、delve、storm、cascade 牌的权重。
 - 预算压力：低预算构筑会惩罚高价牌，并避免公开 combo 组件绕过预算限制。
 - 地牌质量：优先多色地、功能地和合理数量的基本地，避免只因文本关键词塞入低质量地。
+
+## 交互式构筑
+
+用户可以使用 wizard 命令让智能体不断询问构筑要求：
+
+```powershell
+python -m edh_builder.cli wizard
+```
+
+当前会询问主将、核心主题、预算、目标强度、combo 偏好、是否允许无限 combo、meta 类型、meta 补充说明，以及必须加入/必须排除的牌。
+
+## Combo 体系化
+
+构筑器会把公开 combo 扩展为 combo package：
+
+```text
+components: 组合技核心组件
+tutors: 找组件的导师或 transmute 牌
+protection: 保护 combo 的反击或保护咒语
+payoffs: 无限法术力、storm 或抓牌后的终结牌
+```
+
+Markdown 输出会展示本次选中的 combo package，方便用户继续追问和调整。
+
+## Meta 定制
+
+meta profile 会调整配额和评分：
+
+- creature：提高去除和清场需求。
+- combo：提高反击、保护、导师和低费互动。
+- control：提高抽牌、保护、不可反击/闪现类牌权重。
+- graveyard：提高坟场针对权重。
+- artifact：提高神器/结界去除权重。
+- stax：提高低费 ramp 与永久物去除需求。
 
 角色配额位于：
 
@@ -241,7 +277,7 @@ edh_builder.sqlite3
 
 ## 当前限制
 
-- 构筑评分已加入 EDHREC 排名和预算压力，但仍是启发式，尚未接入真实对局数据。
+- 构筑评分已加入 EDHREC 排名、预算压力、combo package 和 meta 定制，但仍是启发式，尚未接入真实对局数据。
 - 已支持 Commander Spellbook bulk JSON 导入，但还没有做增量同步和 UI 展示。
 - 尚未区分纸质牌、Arena 数字专属、Universes Beyond、银边/acorn 等用户偏好过滤。
 - 尚未实现细粒度预算优化，例如按总价动态替换。

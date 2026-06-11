@@ -18,6 +18,9 @@ class BuildPayload(BaseModel):
     budget: float | None = None
     power_level: int = Field(default=6, ge=1, le=10)
     allow_infinite: bool = True
+    combo_preference: str = "balanced"
+    meta_profile: str = "balanced"
+    meta_notes: str = ""
     must_include: list[str] = Field(default_factory=list)
     avoid: list[str] = Field(default_factory=list)
 

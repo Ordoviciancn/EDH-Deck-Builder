@@ -49,9 +49,13 @@ def main() -> None:
     build.add_argument("--budget", type=float)
     build.add_argument("--power-level", type=int, default=6)
     build.add_argument("--no-infinite", action="store_true")
+    build.add_argument("--combo-preference", default="balanced", choices=["none", "light", "balanced", "focused"])
+    build.add_argument("--meta-profile", default="balanced", choices=["balanced", "creature", "combo", "control", "graveyard", "artifact", "stax"])
+    build.add_argument("--meta-notes", default="")
     build.add_argument("--must-include", action="append", default=[])
     build.add_argument("--avoid", action="append", default=[])
     build.add_argument("--format", choices=["markdown", "decklist"], default="markdown")
+    sub.add_parser("wizard")
 
     args = parser.parse_args()
     if args.command == "init-db":
@@ -108,11 +112,50 @@ def main() -> None:
             budget=args.budget,
             power_level=args.power_level,
             allow_infinite=not args.no_infinite,
+            combo_preference=args.combo_preference,
+            meta_profile=args.meta_profile,
+            meta_notes=args.meta_notes,
             must_include=args.must_include,
             avoid=args.avoid,
         )
         deck, errors, plan = EdhDeckBuilder().build(request)
         print(to_plain_text(deck) if args.format == "decklist" else to_grouped_markdown(deck, errors, plan))
+    elif args.command == "wizard":
+        request = _run_wizard()
+        deck, errors, plan = EdhDeckBuilder().build(request)
+        print(to_grouped_markdown(deck, errors, plan))
+
+
+def _ask(prompt: str, default: str = "") -> str:
+    suffix = f" [{default}]" if default else ""
+    value = input(f"{prompt}{suffix}: ").strip()
+    return value or default
+
+
+def _run_wizard() -> BuildRequest:
+    print("EDH 构筑向导：我会逐步询问主将、预算、combo 和 meta。直接回车使用默认值。")
+    commander = _ask("主将英文名", "Quandrix, the Proof")
+    theme = _ask("核心主题/打法", "cascade value combo")
+    budget_raw = _ask("预算美元", "100")
+    power_raw = _ask("目标强度 1-10", "7")
+    combo_preference = _ask("combo 偏好 none/light/balanced/focused", "balanced")
+    allow_infinite = _ask("是否允许无限 combo yes/no", "yes").lower() in {"y", "yes", "true", "1", "是"}
+    meta_profile = _ask("主要 meta balanced/creature/combo/control/graveyard/artifact/stax", "balanced")
+    meta_notes = _ask("补充 meta 说明，例如坟场多、快攻多、蓝控多", "")
+    must = _ask("必须加入的牌，用逗号分隔", "")
+    avoid = _ask("不想使用的牌，用逗号分隔", "")
+    return BuildRequest(
+        commander=commander,
+        theme=theme,
+        budget=float(budget_raw) if budget_raw else None,
+        power_level=int(power_raw),
+        allow_infinite=allow_infinite,
+        combo_preference=combo_preference,
+        meta_profile=meta_profile,
+        meta_notes=meta_notes,
+        must_include=[item.strip() for item in must.split(",") if item.strip()],
+        avoid=[item.strip() for item in avoid.split(",") if item.strip()],
+    )
 
 
 if __name__ == "__main__":
