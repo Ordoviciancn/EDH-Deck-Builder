@@ -49,7 +49,25 @@ $env:OPENAI_MODEL="gpt-4.1-mini"
 
 ## Combo 数据
 
-公开 combo 可通过导入器接入 Commander Spellbook 或其他公开来源，当前基础工程保留统一格式：
+公开 combo 可通过 Commander Spellbook bulk JSON 接入。同步命令：
+
+```powershell
+python -m edh_builder.cli sync-spellbook
+```
+
+如果已经下载了 bulk JSON，可以从本地缓存导入：
+
+```powershell
+python -m edh_builder.cli import-spellbook-file ".cache\spellbook-variants.json"
+```
+
+查看某个颜色组合/主题下的公开 combo：
+
+```powershell
+python -m edh_builder.cli search-combos --identity GU --theme "storm mana" --limit 10
+```
+
+自创 combo 或其他公开来源也可以使用统一 JSONL 格式：
 
 ```json
 {"name":"Example Loop","cards":["Card A","Card B"],"result":"Infinite mana","source":"custom","tags":["infinite","mana"]}

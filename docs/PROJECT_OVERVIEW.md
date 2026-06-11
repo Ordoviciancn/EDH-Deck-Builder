@@ -63,6 +63,30 @@ python -m edh_builder.cli sync-combos
 
 后续可以接入 Commander Spellbook 或其他公开 combo 导出源，只要转换成相同 JSONL 格式即可。
 
+当前项目已经支持 Commander Spellbook bulk JSON：
+
+```powershell
+python -m edh_builder.cli sync-spellbook
+```
+
+如果 `.cache\spellbook-variants.json` 已经存在，可以直接导入：
+
+```powershell
+python -m edh_builder.cli import-spellbook-file ".cache\spellbook-variants.json"
+```
+
+导入后会写入本地 SQLite 的 `combos` 表，来源标记为：
+
+```text
+commander-spellbook
+```
+
+本地查询公开 combo：
+
+```powershell
+python -m edh_builder.cli search-combos --identity GU --theme "storm mana" --limit 10
+```
+
 ## 智能体构筑流程
 
 当前构筑器的工作流：
@@ -72,7 +96,7 @@ python -m edh_builder.cli sync-combos
   -> 解析主将、主题、预算、强度、combo 偏好
   -> 从本地 Scryfall SQLite 读取主将
   -> 按 Commander 合法性、颜色认同、预算过滤全卡池
-  -> 读取 combo 知识库
+  -> 按主将颜色认同与主题读取 combo 知识库
   -> LLM 或本地启发式生成构筑计划
   -> 按角色配额选择卡牌
   -> 执行 EDH 合法性校验
@@ -209,7 +233,7 @@ edh_builder.sqlite3
 ## 当前限制
 
 - 构筑评分仍是启发式，尚未接入真实对局数据。
-- 公开 combo 导入器已预留，但还没有直接绑定 Commander Spellbook API。
+- 已支持 Commander Spellbook bulk JSON 导入，但还没有做增量同步和 UI 展示。
 - 尚未区分纸质牌、Arena 数字专属、Universes Beyond、银边/acorn 等用户偏好过滤。
 - 尚未实现细粒度预算优化，例如按总价动态替换。
 - 标签系统目前基于简单文本规则，后续应升级为嵌入检索和人工标签混合方案。

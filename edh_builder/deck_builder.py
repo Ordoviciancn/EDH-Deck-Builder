@@ -42,7 +42,7 @@ class EdhDeckBuilder:
         if not pool:
             raise DeckBuildError("Legal card pool is empty. Run sync-scryfall first.")
 
-        combos = self.combos.list_all()
+        combos = self.combos.relevant_for(commander.color_identity, request.theme)
         plan = propose_plan(request, commander, combos)
         desired_tags = set(plan.get("desired_tags") or [])
         avoid_cards = {name.lower() for name in plan.get("avoid_cards", [])}

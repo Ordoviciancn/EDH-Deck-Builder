@@ -4,12 +4,13 @@ import argparse
 import sys
 from pathlib import Path
 
-from .combo_importer import import_public_combo_export, sync_local_combos
+from .combo_importer import import_public_combo_export, import_spellbook_variants, sync_local_combos, sync_spellbook_variants
 from .db import init_db
 from .deck_builder import EdhDeckBuilder
 from .exporters import to_grouped_markdown, to_plain_text
 from .models import BuildRequest
 from .repository import CardRepository
+from .repository import ComboRepository
 from .scryfall import import_oracle_cards, sync_oracle_cards
 
 
@@ -24,6 +25,10 @@ def main() -> None:
     import_scryfall = sub.add_parser("import-scryfall-file")
     import_scryfall.add_argument("path")
     sub.add_parser("sync-combos")
+    sync_spellbook = sub.add_parser("sync-spellbook")
+    sync_spellbook.add_argument("--path", default=None)
+    import_spellbook = sub.add_parser("import-spellbook-file")
+    import_spellbook.add_argument("path")
 
     import_combos = sub.add_parser("import-combos")
     import_combos.add_argument("path")
@@ -31,6 +36,10 @@ def main() -> None:
     search = sub.add_parser("search")
     search.add_argument("query")
     search.add_argument("--limit", type=int, default=20)
+    combo_search = sub.add_parser("search-combos")
+    combo_search.add_argument("--identity", default="")
+    combo_search.add_argument("--theme", default="")
+    combo_search.add_argument("--limit", type=int, default=10)
 
     build = sub.add_parser("build")
     build.add_argument("--commander", required=True)
@@ -52,6 +61,11 @@ def main() -> None:
         print(f"Imported {import_oracle_cards(Path(args.path))} Scryfall oracle cards.")
     elif args.command == "sync-combos":
         print(f"Imported {sync_local_combos()} local combos.")
+    elif args.command == "sync-spellbook":
+        path = Path(args.path) if args.path else None
+        print(f"Imported {sync_spellbook_variants(path)} Commander Spellbook combos.")
+    elif args.command == "import-spellbook-file":
+        print(f"Imported {import_spellbook_variants(Path(args.path))} Commander Spellbook combos.")
     elif args.command == "import-combos":
         print(f"Imported {import_public_combo_export(Path(args.path))} combos.")
     elif args.command == "search":
@@ -59,6 +73,13 @@ def main() -> None:
             status = "commander" if card.can_be_commander else "card"
             legality = "legal" if card.legal_commander else "not legal"
             print(f"{card.name} [{status}, {legality}] {card.type_line}")
+    elif args.command == "search-combos":
+        combos = ComboRepository().relevant_for(set(args.identity), args.theme, args.limit)
+        for combo in combos:
+            print(combo.name)
+            print("  Cards: " + ", ".join(combo.cards))
+            print("  Result: " + combo.result)
+            print("  Tags: " + ", ".join(combo.tags[:8]))
     elif args.command == "build":
         request = BuildRequest(
             commander=args.commander,

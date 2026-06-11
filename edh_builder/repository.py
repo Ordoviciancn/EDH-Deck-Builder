@@ -123,9 +123,59 @@ class ComboRepository:
             for row in rows
         ]
 
+    def relevant_for(self, color_identity: set[str], theme: str = "", limit: int = 300) -> list[Combo]:
+        with connect() as conn:
+            rows = conn.execute("SELECT * FROM combos ORDER BY source, name").fetchall()
+        combos: list[tuple[int, Combo]] = []
+        theme_terms = {term for term in theme.lower().replace(",", " ").split() if len(term) >= 4}
+        for row in rows:
+            tags = tuple(json.loads(row["tags"] or "[]"))
+            combo_identity = _identity_from_tags(tags)
+            if combo_identity and not combo_identity.issubset(color_identity):
+                continue
+            combo = Combo(
+                name=row["name"],
+                cards=tuple(json.loads(row["cards"])),
+                result=row["result"],
+                source=row["source"],
+                tags=tags,
+            )
+            haystack = " ".join([combo.name, combo.result, " ".join(combo.cards), " ".join(combo.tags)]).lower()
+            score = 0
+            if row["source"] == "commander-spellbook":
+                score += 5
+            if "infinite" in haystack:
+                score += 10
+            score += 4 * sum(1 for term in theme_terms if term in haystack)
+            if "mana" in haystack:
+                score += 2
+            if "storm" in haystack:
+                score += 2
+            combos.append((score, combo))
+        combos.sort(key=lambda item: (-item[0], len(item[1].cards), item[1].name))
+        return [combo for _, combo in combos[:limit]]
+
     def upsert_many(self, combos: list[Combo]) -> int:
         with connect() as conn:
             conn.execute("DELETE FROM combos WHERE source LIKE 'seed/%' OR source = 'custom'")
+            conn.executemany(
+                "INSERT INTO combos(name, cards, result, source, tags) VALUES (?, ?, ?, ?, ?)",
+                [
+                    (
+                        combo.name,
+                        json.dumps(list(combo.cards), ensure_ascii=False),
+                        combo.result,
+                        combo.source,
+                        json.dumps(list(combo.tags), ensure_ascii=False),
+                    )
+                    for combo in combos
+                ],
+            )
+        return len(combos)
+
+    def replace_source(self, source: str, combos: list[Combo]) -> int:
+        with connect() as conn:
+            conn.execute("DELETE FROM combos WHERE source = ?", (source,))
             conn.executemany(
                 "INSERT INTO combos(name, cards, result, source, tags) VALUES (?, ?, ?, ?, ?)",
                 [
@@ -162,3 +212,10 @@ def _price(card: dict) -> float | None:
         return float(usd) if usd else None
     except ValueError:
         return None
+
+
+def _identity_from_tags(tags: tuple[str, ...]) -> set[str]:
+    for tag in tags:
+        if tag.startswith("identity:"):
+            return set(tag.split(":", 1)[1])
+    return set()
