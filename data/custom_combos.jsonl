@@ -1,0 +1,2 @@
+{"name":"Mikaeus Triskelion Loop","cards":["Mikaeus, the Unhallowed","Triskelion"],"result":"Infinite damage with proper sequencing.","source":"seed/custom","tags":["infinite","damage","creature"]}
+{"name":"Isochron Dramatic Mana","cards":["Isochron Scepter","Dramatic Reversal"],"result":"Infinite untaps and mana when nonland mana sources produce at least three mana.","source":"seed/custom","tags":["infinite","mana","artifact"]}

@@ -1,0 +1,13 @@
+# Lightweight YAML-like file parsed by the app's simple loader.
+# Keep one role per line as: role: min,target,max
+lands: 35,37,39
+ramp: 9,11,13
+draw: 9,11,13
+removal: 7,9,11
+wipe: 2,3,4
+protection: 2,3,5
+tutor: 0,2,5
+combo_piece: 0,4,10
+wincon: 3,5,7
+synergy: 14,20,28
+flex: 3,7,12

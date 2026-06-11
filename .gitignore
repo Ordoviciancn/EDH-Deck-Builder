@@ -1,0 +1,9 @@
+.venv/
+.cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+edh_builder.sqlite3
+edh_builder.sqlite3-shm
+edh_builder.sqlite3-wal
+*.log

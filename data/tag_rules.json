@@ -1,0 +1,16 @@
+{
+  "ramp": ["add {", "search your library for a basic land", "treasure token", "mana of any color", "mana rock"],
+  "draw": ["draw a card", "draw two cards", "draw cards", "whenever you draw"],
+  "removal": ["destroy target", "exile target", "return target", "counter target", "deals damage to target"],
+  "wipe": ["destroy all", "exile all", "each creature", "all creatures get", "return all"],
+  "protection": ["hexproof", "indestructible", "protection from", "phase out", "can't be countered"],
+  "tutor": ["search your library", "put that card into your hand", "put it into your hand"],
+  "graveyard": ["graveyard", "return target card", "escape", "flashback", "retrace", "dredge"],
+  "sacrifice": ["sacrifice", "dies", "whenever another creature dies"],
+  "tokens": ["create", "token"],
+  "aristocrats": ["whenever a creature dies", "each opponent loses", "sacrifice another creature"],
+  "blink": ["exile", "return it to the battlefield"],
+  "spell_slinger": ["instant or sorcery", "whenever you cast an instant", "whenever you cast a sorcery"],
+  "wincon": ["you win the game", "each opponent loses", "double your life total", "can't lose the game"],
+  "combo_piece": ["untap", "copy", "activated ability", "triggered ability", "mana ability"]
+}
