@@ -58,6 +58,7 @@ class BuildRequest:
     combo_preference: str = "balanced"
     meta_profile: str = "balanced"
     meta_notes: str = ""
+    allow_universes_beyond: bool = False
     must_include: list[str] = field(default_factory=list)
     avoid: list[str] = field(default_factory=list)
 

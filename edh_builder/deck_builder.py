@@ -37,11 +37,13 @@ class EdhDeckBuilder:
         self.active_budget: float | None = None
         self.active_meta_profile = "balanced"
         self.active_meta_notes = ""
+        self.active_allow_universes_beyond = False
 
     def build(self, request: BuildRequest) -> tuple[Deck, list[str], dict]:
         self.active_budget = request.budget
         self.active_meta_profile = request.meta_profile
         self.active_meta_notes = request.meta_notes
+        self.active_allow_universes_beyond = request.allow_universes_beyond
         commander = self.cards.get_by_name(request.commander)
         if not commander:
             raise DeckBuildError(f"Commander not found: {request.commander}. Run sync-scryfall first.")
@@ -253,7 +255,7 @@ class EdhDeckBuilder:
                 (role in tags and role not in {"draw", "wipe", "tutor", "protection"})
                 or card.name in self.staples.get(role, [])
                 or self._role_fit_score(card, role, tags) >= threshold
-                or (role in {"synergy", "combo_piece", "wincon"} and tags & desired_tags)
+                or (role in {"synergy", "combo_piece"} and tags & desired_tags)
             ):
                 tagged.append(card)
         if not tagged and role in {"synergy", "flex"}:
@@ -275,7 +277,32 @@ class EdhDeckBuilder:
             return False
         if "Sticker" in card.type_line or "Attraction" in card.type_line:
             return False
+        if not self.active_allow_universes_beyond and self._is_universes_beyond(card):
+            return False
         return True
+
+    @staticmethod
+    def _is_universes_beyond(card: Card) -> bool:
+        marker = f"{card.set_code} {card.set_name}".lower()
+        blocked_terms = {
+            "assassin",
+            "avatar",
+            "doctor who",
+            "fallout",
+            "final fantasy",
+            "jurassic",
+            "lord of the rings",
+            "marvel",
+            "my little pony",
+            "street fighter",
+            "transformers",
+            "warhammer",
+            "tomb raider",
+            "teenage mutant",
+            "walking dead",
+        }
+        blocked_sets = {"acr", "bot", "clu", "fin", "fic", "pip", "rex", "spm", "tla", "tmt", "who"}
+        return card.set_code.lower() in blocked_sets or any(term in marker for term in blocked_terms)
 
     def _edh_quality_score(self, card: Card) -> float:
         if card.edhrec_rank is None:
@@ -332,6 +359,8 @@ class EdhDeckBuilder:
                 score -= 30
             elif "those creatures" in text or "creatures you control" in text:
                 score -= 30
+            elif "attached to" in text:
+                score -= 30
             elif any(phrase in text for phrase in ["destroy all", "exile all creatures", "exile all nonland", "return all creatures", "return each creature"]):
                 score += 18
             elif any(phrase in text for phrase in ["each creature gets -", "each creature deals", "damage to each creature", "-x/-x until end of turn"]):
@@ -366,6 +395,10 @@ class EdhDeckBuilder:
                 score += 20
             if any(phrase in text for phrase in ["you win the game", "each opponent loses", "storm", "cascade"]):
                 score += 14
+            if "room" in text and "you win the game" in text:
+                score -= 22
+            if card.edhrec_rank and card.edhrec_rank > 12000 and card.name not in self.staples["wincon"]:
+                score -= 12
         return score
 
     def _staple_score(self, card: Card, role: str) -> float:
@@ -534,6 +567,15 @@ class EdhDeckBuilder:
                 continue
             haystack = " ".join([combo.name, combo.result, " ".join(combo.tags)]).lower()
             score = 100 - len(combo.cards) * 12 - price
+            for card in cards:
+                if card and card.cmc >= 7:
+                    score -= (card.cmc - 6) * 8
+                if card and card.cmc <= 3:
+                    score += 6
+                if card and ("vehicle" in card.type_line.lower() or "when this vehicle attacks" in card.oracle_text.lower()):
+                    score -= 25
+                if card and "room" in card.type_line.lower():
+                    score -= 18
             if "infinite" in haystack:
                 score += 18
             if "mana" in haystack:

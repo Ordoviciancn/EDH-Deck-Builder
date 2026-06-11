@@ -320,3 +320,13 @@ Preview from API:
 ```text
 POST /rules/context
 ```
+
+## Chinese Web Wizard
+
+The local FastAPI service now serves a Chinese deckbuilding wizard at:
+
+```text
+http://127.0.0.1:8000/
+```
+
+The page exposes the same questioning process as the CLI wizard: commander, theme, budget, power level, combo preference, meta profile, meta notes, required cards, excluded cards, and whether Universes Beyond / special IP cards are allowed. No commander is pre-filled.

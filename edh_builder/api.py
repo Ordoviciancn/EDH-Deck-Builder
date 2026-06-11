@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+
+from pathlib import Path
 
 from .deck_builder import DeckBuildError, EdhDeckBuilder
 from .exporters import to_grouped_markdown, to_plain_text
@@ -22,6 +25,7 @@ class BuildPayload(BaseModel):
     combo_preference: str = "balanced"
     meta_profile: str = "balanced"
     meta_notes: str = ""
+    allow_universes_beyond: bool = False
     must_include: list[str] = Field(default_factory=list)
     avoid: list[str] = Field(default_factory=list)
 
@@ -29,6 +33,11 @@ class BuildPayload(BaseModel):
 @app.get("/health")
 def health() -> dict:
     return {"ok": True}
+
+
+@app.get("/")
+def index() -> FileResponse:
+    return FileResponse(Path(__file__).resolve().parent.parent / "web" / "index.html")
 
 
 @app.get("/cards/search")

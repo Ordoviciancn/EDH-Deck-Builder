@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EDH 构筑智能体</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #1d2433;
+      --muted: #667085;
+      --line: #d9dee8;
+      --accent: #2563eb;
+      --accent-soft: #eaf1ff;
+      --danger: #b42318;
+      --ok: #067647;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    .sub { margin: 0; color: var(--muted); font-size: 14px; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 440px) 1fr;
+      gap: 18px;
+      padding: 18px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    h2 { margin: 0 0 12px; font-size: 18px; }
+    .step {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      margin-top: 14px;
+    }
+    .step:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 650;
+      margin: 10px 0 6px;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+    textarea { min-height: 78px; resize: vertical; }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    .check input { width: auto; }
+    button {
+      border: 0;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    button:disabled { opacity: 0.65; cursor: wait; }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .status {
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 14px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .status.error { background: #fef3f2; color: var(--danger); display: block; }
+    .status.ok { background: #ecfdf3; color: var(--ok); display: block; }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #111827;
+      color: #f9fafb;
+      border-radius: 8px;
+      padding: 14px;
+      overflow: auto;
+      max-height: 720px;
+      margin: 10px 0 0;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .tab.active { background: var(--accent); color: #fff; }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcff;
+    }
+    .metric b { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .metric span { font-weight: 750; }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; padding: 12px; }
+      .grid2, .summary { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EDH 构筑智能体</h1>
+    <p class="sub">按主将、预算、组合技偏好和本地 meta 逐步生成 Commander 套牌。不会预设任何具体主将。</p>
+  </header>
+  <main>
+    <section>
+      <h2>构筑询问流程</h2>
+      <form id="builderForm">
+        <div class="step">
+          <h3>1. 基础目标</h3>
+          <label for="commander">主将英文名 *</label>
+          <input id="commander" required placeholder="例如：Muldrotha, the Gravetide" autocomplete="off" />
+          <div class="hint">请使用英文 Oracle 名称，便于匹配 Scryfall 本地库。</div>
+          <label for="theme">核心主题/打法</label>
+          <textarea id="theme" placeholder="例如：graveyard value recursion / tokens aristocrats / spellslinger control"></textarea>
+        </div>
+
+        <div class="step">
+          <h3>2. 强度与预算</h3>
+          <div class="grid2">
+            <div>
+              <label for="budget">预算，美元</label>
+              <input id="budget" type="number" min="0" step="1" placeholder="100" />
+            </div>
+            <div>
+              <label for="power">目标强度 1-10</label>
+              <input id="power" type="number" min="1" max="10" value="7" />
+            </div>
+          </div>
+          <label class="check"><input id="allowInfinite" type="checkbox" checked /> 允许无限组合技</label>
+          <label class="check"><input id="allowUB" type="checkbox" /> 允许宇宙联名/特殊 IP 牌</label>
+        </div>
+
+        <div class="step">
+          <h3>3. 组合技与环境</h3>
+          <div class="grid2">
+            <div>
+              <label for="comboPreference">combo 偏好</label>
+              <select id="comboPreference">
+                <option value="none">不要 combo</option>
+                <option value="light">轻量 combo</option>
+                <option value="balanced" selected>平衡</option>
+                <option value="focused">重点围绕 combo</option>
+              </select>
+            </div>
+            <div>
+              <label for="metaProfile">主要 meta</label>
+              <select id="metaProfile">
+                <option value="balanced">均衡环境</option>
+                <option value="creature">生物/快攻多</option>
+                <option value="combo">组合技多</option>
+                <option value="control">控制/反击多</option>
+                <option value="graveyard">坟场多</option>
+                <option value="artifact">神器/结界多</option>
+                <option value="stax">Stax/锁牌多</option>
+              </select>
+            </div>
+          </div>
+          <label for="metaNotes">meta 补充说明</label>
+          <textarea id="metaNotes" placeholder="例如：桌上蓝控多、坟场套多、速度偏快"></textarea>
+        </div>
+
+        <div class="step">
+          <h3>4. 个性化限制</h3>
+          <label for="mustInclude">必须加入的牌</label>
+          <textarea id="mustInclude" placeholder="英文牌名，用逗号分隔"></textarea>
+          <label for="avoid">不想使用的牌</label>
+          <textarea id="avoid" placeholder="英文牌名，用逗号分隔"></textarea>
+        </div>
+
+        <div class="actions">
+          <button id="submitBtn" type="submit">开始构筑</button>
+          <button class="secondary" type="button" id="rulesBtn">查看规则上下文</button>
+        </div>
+      </form>
+    </section>
+
+    <section>
+      <h2>输出结果</h2>
+      <div id="status" class="status"></div>
+      <div class="summary">
+        <div class="metric"><b>合法性</b><span id="validity">未构筑</span></div>
+        <div class="metric"><b>组合技包</b><span id="comboName">无</span></div>
+        <div class="metric"><b>主将</b><span id="commanderOut">无</span></div>
+      </div>
+      <div class="tabs">
+        <button class="secondary tab active" type="button" data-view="markdown">中文分组结果</button>
+        <button class="secondary tab" type="button" data-view="decklist">导入牌表</button>
+        <button class="secondary tab" type="button" data-view="rules">规则上下文</button>
+      </div>
+      <pre id="output">请先在左侧填写需求并点击“开始构筑”。</pre>
+    </section>
+  </main>
+
+  <script>
+    const state = { markdown: "", decklist: "", rules: "" };
+    const output = document.getElementById("output");
+    const statusBox = document.getElementById("status");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function listFromText(id) {
+      return document.getElementById(id).value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function payload() {
+      return {
+        commander: document.getElementById("commander").value.trim(),
+        theme: document.getElementById("theme").value.trim(),
+        budget: document.getElementById("budget").value ? Number(document.getElementById("budget").value) : null,
+        power_level: Number(document.getElementById("power").value || 7),
+        allow_infinite: document.getElementById("allowInfinite").checked,
+        combo_preference: document.getElementById("comboPreference").value,
+        meta_profile: document.getElementById("metaProfile").value,
+        meta_notes: document.getElementById("metaNotes").value.trim(),
+        allow_universes_beyond: document.getElementById("allowUB").checked,
+        must_include: listFromText("mustInclude"),
+        avoid: listFromText("avoid")
+      };
+    }
+
+    function showStatus(message, kind) {
+      statusBox.textContent = message;
+      statusBox.className = "status " + kind;
+    }
+
+    function setActive(view) {
+      document.querySelectorAll(".tab").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.view === view);
+      });
+      output.textContent = state[view] || "暂无内容。";
+    }
+
+    async function postJson(url, body) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "请求失败");
+      return data;
+    }
+
+    document.getElementById("builderForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const body = payload();
+      if (!body.commander) {
+        showStatus("请先输入主将英文名。", "error");
+        return;
+      }
+      submitBtn.disabled = true;
+      showStatus("智能体正在读取本地卡库、公开 combo、规则上下文并构筑...", "ok");
+      try {
+        const data = await postJson("/decks/build", body);
+        state.markdown = data.markdown;
+        state.decklist = data.decklist;
+        document.getElementById("validity").textContent = data.validation_errors.length ? "有问题" : "通过";
+        document.getElementById("commanderOut").textContent = data.commander;
+        document.getElementById("comboName").textContent = data.plan.combo_package ? data.plan.combo_package.name : "无";
+        showStatus(data.validation_errors.length ? "构筑完成，但存在合法性问题。" : "构筑完成，合法性校验通过。", data.validation_errors.length ? "error" : "ok");
+        setActive("markdown");
+      } catch (error) {
+        showStatus(error.message, "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    document.getElementById("rulesBtn").addEventListener("click", async () => {
+      const body = payload();
+      if (!body.commander) {
+        showStatus("请先输入主将英文名，再查看规则上下文。", "error");
+        return;
+      }
+      showStatus("正在生成该主将/主题对应的规则上下文...", "ok");
+      try {
+        const data = await postJson("/rules/context", body);
+        state.rules = data.rules_context;
+        setActive("rules");
+      } catch (error) {
+        showStatus(error.message, "error");
+      }
+    });
+
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.addEventListener("click", () => setActive(btn.dataset.view));
+    });
+  </script>
+</body>
+</html>

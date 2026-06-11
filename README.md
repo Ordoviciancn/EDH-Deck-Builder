@@ -40,6 +40,14 @@ python -m edh_builder.cli wizard
 uvicorn edh_builder.api:app --reload
 ```
 
+打开中文网页向导：
+
+```text
+http://127.0.0.1:8000/
+```
+
+网页会逐步询问主将、主题、预算、强度、combo 偏好、meta、必带牌和排除牌。主将不会预设为任何特定卡牌。
+
 ## LLM 配置
 
 默认支持 OpenAI 兼容接口：

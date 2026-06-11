@@ -60,6 +60,7 @@ def main() -> None:
     build.add_argument("--combo-preference", default="balanced", choices=["none", "light", "balanced", "focused"])
     build.add_argument("--meta-profile", default="balanced", choices=["balanced", "creature", "combo", "control", "graveyard", "artifact", "stax"])
     build.add_argument("--meta-notes", default="")
+    build.add_argument("--allow-universes-beyond", action="store_true")
     build.add_argument("--must-include", action="append", default=[])
     build.add_argument("--avoid", action="append", default=[])
     build.add_argument("--format", choices=["markdown", "decklist"], default="markdown")
@@ -139,6 +140,7 @@ def main() -> None:
             combo_preference=args.combo_preference,
             meta_profile=args.meta_profile,
             meta_notes=args.meta_notes,
+            allow_universes_beyond=args.allow_universes_beyond,
             must_include=args.must_include,
             avoid=args.avoid,
         )
@@ -157,15 +159,18 @@ def _ask(prompt: str, default: str = "") -> str:
 
 
 def _run_wizard() -> BuildRequest:
-    print("EDH 构筑向导：我会逐步询问主将、预算、combo 和 meta。直接回车使用默认值。")
-    commander = _ask("主将英文名", "Quandrix, the Proof")
-    theme = _ask("核心主题/打法", "cascade value combo")
+    print("EDH 构筑向导：我会逐步询问主将、预算、combo 和 meta。主将不预设，请输入英文卡名。")
+    commander = ""
+    while not commander:
+        commander = _ask("主将英文名", "")
+    theme = _ask("核心主题/打法", "")
     budget_raw = _ask("预算美元", "100")
     power_raw = _ask("目标强度 1-10", "7")
     combo_preference = _ask("combo 偏好 none/light/balanced/focused", "balanced")
     allow_infinite = _ask("是否允许无限 combo yes/no", "yes").lower() in {"y", "yes", "true", "1", "是"}
     meta_profile = _ask("主要 meta balanced/creature/combo/control/graveyard/artifact/stax", "balanced")
     meta_notes = _ask("补充 meta 说明，例如坟场多、快攻多、蓝控多", "")
+    allow_universes_beyond = _ask("是否允许宇宙联名/特殊 IP 牌 yes/no", "no").lower() in {"y", "yes", "true", "1", "是"}
     must = _ask("必须加入的牌，用逗号分隔", "")
     avoid = _ask("不想使用的牌，用逗号分隔", "")
     return BuildRequest(
@@ -177,6 +182,7 @@ def _run_wizard() -> BuildRequest:
         combo_preference=combo_preference,
         meta_profile=meta_profile,
         meta_notes=meta_notes,
+        allow_universes_beyond=allow_universes_beyond,
         must_include=[item.strip() for item in must.split(",") if item.strip()],
         avoid=[item.strip() for item in avoid.split(",") if item.strip()],
     )
