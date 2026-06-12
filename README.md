@@ -58,6 +58,53 @@ http://127.0.0.1:8000/
 
 网页会询问主将、主题、预算、强度、combo 偏好、meta 环境、必带牌、排除牌，以及是否允许特殊 IP 牌。
 
+## 接入 LLM
+
+不配置 API 时，工具会使用本地 fallback 规划和评分器。配置 LLM API 后，模型会参与构筑规划阶段。
+
+默认支持 OpenAI，也支持 OpenAI-compatible `/chat/completions` 格式的服务，例如 DeepSeek、OpenRouter、Moonshot/Kimi、SiliconFlow 等。
+
+复制配置模板：
+
+```powershell
+Copy-Item .env.example .env
+```
+
+编辑 `.env`，填入自己的 API key：
+
+```text
+LLM_PROVIDER=openai
+LLM_API_KEY=sk-your-api-key
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4.1-mini
+```
+
+检查当前是否已接入：
+
+```powershell
+python -m edh_builder.cli llm-status
+```
+
+修改 `.env` 后需要重启网页服务。
+
+其他兼容服务示例：
+
+```text
+# DeepSeek
+LLM_PROVIDER=deepseek
+LLM_API_KEY=sk-your-deepseek-key
+LLM_BASE_URL=https://api.deepseek.com/v1
+LLM_MODEL=deepseek-chat
+
+# OpenRouter
+LLM_PROVIDER=openrouter
+LLM_API_KEY=sk-or-your-openrouter-key
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_MODEL=openai/gpt-4.1-mini
+```
+
+旧版 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`OPENAI_MODEL` 仍然兼容。
+
 ## CLI 用法
 
 交互式构筑：

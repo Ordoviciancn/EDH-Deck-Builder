@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .combo_importer import import_public_combo_export, import_spellbook_variants, sync_local_combos, sync_spellbook_variants
+from .config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_PROVIDER, PROJECT_ROOT
 from .db import init_db
 from .deck_builder import EdhDeckBuilder
 from .exporters import to_grouped_markdown, to_plain_text
@@ -22,12 +23,17 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("init-db")
+    sub.add_parser("llm-status")
     sub.add_parser("sync-scryfall")
+
     import_scryfall = sub.add_parser("import-scryfall-file")
     import_scryfall.add_argument("path")
+
     sub.add_parser("sync-combos")
+
     sync_spellbook = sub.add_parser("sync-spellbook")
     sync_spellbook.add_argument("--path", default=None)
+
     import_spellbook = sub.add_parser("import-spellbook-file")
     import_spellbook.add_argument("path")
 
@@ -72,6 +78,12 @@ def main() -> None:
     if args.command == "init-db":
         init_db()
         print("Initialized database.")
+    elif args.command == "llm-status":
+        print(f"LLM provider: {LLM_PROVIDER}")
+        print(f"LLM API key: {'configured' if LLM_API_KEY else 'not configured'}")
+        print(f"LLM base URL: {LLM_BASE_URL}")
+        print(f"LLM model: {LLM_MODEL}")
+        print(f".env file: {'found' if (PROJECT_ROOT / '.env').exists() else 'not found'}")
     elif args.command == "sync-scryfall":
         print(f"Imported {sync_oracle_cards()} Scryfall oracle cards.")
     elif args.command == "import-scryfall-file":
@@ -165,18 +177,18 @@ def _ask(prompt: str, default: str = "") -> str:
 
 
 def _run_wizard() -> BuildRequest:
-    print("EDH 构筑向导：我会逐步询问主将、预算、combo 和 meta。主将不预设，请输入英文卡名。")
+    print("EDH 构筑向导：我会逐步询问主将、预算、combo 和 meta。，请输入英文卡名。")
     commander = ""
     while not commander:
         commander = _ask("主将英文名", "")
     theme = _ask("核心主题/打法", "")
-    budget_raw = _ask("预算，美元", "100")
-    power_raw = _ask("目标强度 1-10", "7")
-    combo_preference = _ask("combo 偏好 none/light/balanced/focused", "balanced")
-    allow_infinite = _ask("是否允许无限 combo yes/no", "yes").lower() in {"y", "yes", "true", "1", "是"}
-    meta_profile = _ask("主要 meta balanced/creature/combo/control/graveyard/artifact/stax", "balanced")
+    budget_raw = _ask("预算，美元", "")
+    power_raw = _ask("目标强度 1-10", "")
+    combo_preference = _ask("combo 偏好 none/light/balanced/focused", "")
+    allow_infinite = _ask("是否允许无限 combo yes/no", "").lower() in {"y", "yes", "true", "1", "是"}
+    meta_profile = _ask("主要 meta balanced/creature/combo/control/graveyard/artifact/stax", "")
     meta_notes = _ask("补充 meta 说明，例如坟场多、快攻多、蓝控多", "")
-    allow_universes_beyond = _ask("是否允许宇宙联名/特殊 IP 牌 yes/no", "no").lower() in {"y", "yes", "true", "1", "是"}
+    allow_universes_beyond = _ask("是否允许宇宙联名/特殊 IP 牌 yes/no", "no").lower() in {"y", "yes", "true", "1", ""}
     must = _ask("必须加入的牌，用逗号分隔", "")
     avoid = _ask("不想使用的牌，用逗号分隔", "")
     return BuildRequest(

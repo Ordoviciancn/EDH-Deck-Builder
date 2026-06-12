@@ -4,13 +4,13 @@ import json
 import urllib.error
 import urllib.request
 
-from .config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
+from .config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
 from .models import BuildRequest, Card, Combo
 from .rules_knowledge import rules_context_for
 
 
 def propose_plan(request: BuildRequest, commander: Card, combos: list[Combo]) -> dict:
-    if not OPENAI_API_KEY:
+    if not LLM_API_KEY:
         return fallback_plan(request, commander, combos)
 
     combo_lines = [
@@ -51,7 +51,7 @@ def propose_plan(request: BuildRequest, commander: Card, combos: list[Combo]) ->
     }
     body = json.dumps(
         {
-            "model": OPENAI_MODEL,
+            "model": LLM_MODEL,
             "messages": [
                 {
                     "role": "system",
@@ -71,9 +71,9 @@ def propose_plan(request: BuildRequest, commander: Card, combos: list[Combo]) ->
         ensure_ascii=False,
     ).encode("utf-8")
     request_obj = urllib.request.Request(
-        f"{OPENAI_BASE_URL}/chat/completions",
+        f"{LLM_BASE_URL}/chat/completions",
         data=body,
-        headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"},
+        headers={"Authorization": f"Bearer {LLM_API_KEY}", "Content-Type": "application/json"},
         method="POST",
     )
     try:
