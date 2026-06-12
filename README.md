@@ -1,14 +1,17 @@
 # EDH Deck Builder Agent
 
-万智牌 Commander/EDH 自动构筑智能体初版。项目使用本地 Scryfall 全卡数据库、Commander Spellbook 公开 combo、Commander 合法性校验、规则知识上下文和启发式评分器，生成可解释的 100 张 EDH 牌表。
+万智牌 Commander/EDH 自动构筑智能体。项目使用本地 Scryfall 全卡数据库、Commander Spellbook 公开 combo、本地规则型 combo 合成、Commander 合法性校验、规则知识上下文和启发式评分器，生成可解释的 100 张 EDH 牌表。
 
 ## 功能
 
 - 同步 Scryfall Oracle 全卡数据到本地 SQLite。
 - 同步 Commander Spellbook 公开 combo。
+- 根据本地卡库按规则模板合成候选 combo。
 - 校验 EDH 基础合法性：100 张、singleton、颜色认同、Commander 合法性、禁卡。
-- 根据预算、强度、combo 偏好和 meta 环境构筑。
-- 生成 combo package：组件、导师、保护、payoff。
+- 按主将、预算、强度、combo 偏好和 meta 环境构筑。
+- 按颜色轮、功能比例、曲线、预算和 meta 对单卡评分。
+- 输出构筑审计：目标比例、实际比例、非地曲线、颜色源、已知价格。
+- 输出每张牌的投入理由。
 - 默认排除 Universes Beyond / 特殊 IP 牌，可手动允许。
 - 提供中文网页、CLI 和 FastAPI。
 
@@ -129,13 +132,14 @@ GET  /health
 }
 ```
 
-## 重要本地文件
+## 本地文件
 
 不会进入 Git：
 
 ```text
 edh_builder.sqlite3
 .cache/
+dist/
 ```
 
 源码与配置：
@@ -148,6 +152,16 @@ tests/
 docs/
 ```
 
+## 打包
+
+运行测试并生成干净 zip：
+
+```powershell
+.\scripts\package.ps1
+```
+
+产物会写入 `dist/`，不会包含本地数据库、缓存和旧打包文件。
+
 ## 数据源
 
 - Scryfall Bulk Data: https://scryfall.com/docs/api/bulk-data
@@ -158,4 +172,4 @@ docs/
 
 ## 当前定位
 
-这是可运行的初版构筑智能体。它适合生成合法的 EDH 构筑草案、探索 combo 和做 meta 定制，但还不能替代高水平牌手的最终精修。后续重点是总价回算替换、主将专属评分、多轮迭代优化和对局模拟。
+这是一个可运行的初版 EDH 构筑智能体。它现在会给出每张牌的投入理由，并用颜色轮、功能比例、预算、meta 和 combo 机会成本来约束构筑。它仍然是启发式构筑器，不是完整对局模拟器；高强度牌表仍建议人工复核和多轮精修。

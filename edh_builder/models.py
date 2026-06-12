@@ -89,3 +89,5 @@ class ComboPackage:
     protection: tuple[str, ...] = ()
     payoffs: tuple[str, ...] = ()
     notes: str = ""
+    source: str = "public"
+    rules_logic: tuple[str, ...] = ()

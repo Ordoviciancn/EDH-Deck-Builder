@@ -1,6 +1,6 @@
 {
   "ramp": ["add {", "search your library for a basic land", "treasure token", "mana of any color", "mana rock"],
-  "draw": ["draw two cards", "draw cards", "whenever you draw", "whenever", "at the beginning of your upkeep"],
+  "draw": ["draw two cards", "draw cards", "draw a card", "whenever you draw", "whenever one or more", "at the beginning of your upkeep, draw"],
   "removal": ["destroy target", "exile target", "return target", "counter target", "deals damage to target"],
   "wipe": ["destroy all", "exile all", "each creature", "all creatures get", "return all creatures", "return each creature"],
   "protection": ["hexproof", "indestructible", "protection from", "phase out", "can't be countered"],

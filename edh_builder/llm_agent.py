@@ -32,12 +32,21 @@ def propose_plan(request: BuildRequest, commander: Card, combos: list[Combo]) ->
         "must_include": request.must_include,
         "avoid": request.avoid,
         "available_combo_context": combo_lines,
+        "deckbuilding_principles": [
+            "Build like an experienced Commander player: every card must have a role and a reason.",
+            "Respect the color pie: use each color for roles it is good at unless card text gives a clear reason.",
+            "Balance functional ratios: lands, ramp, card advantage, interaction, board wipes, protection, tutors, win conditions, synergy, and combo density.",
+            "When proposing self-built combos, explain the MTG rules interaction and only use legal cards from the commander color identity.",
+            "Do not treat public combos as automatically correct; prefer compact, searchable, protectable combos that fit the commander and meta.",
+        ],
         "json_schema": {
             "strategy": "string",
             "desired_tags": ["string"],
             "combo_cards": ["string"],
             "avoid_cards": ["string"],
-            "role_weights": {"ramp": 1.0, "draw": 1.0}
+            "role_weights": {"ramp": 1.0, "draw": 1.0},
+            "construction_notes": ["string"],
+            "combo_reasoning": ["string"],
         },
     }
     body = json.dumps(
@@ -49,6 +58,9 @@ def propose_plan(request: BuildRequest, commander: Card, combos: list[Combo]) ->
                     "content": (
                         "You are an expert Magic: The Gathering Commander deckbuilding agent. "
                         "Use the supplied rules_context as authoritative planning guidance. "
+                        "Think like a strong human EDH deckbuilder: color pie, functional ratios, curve, "
+                        "commander synergy, meta pressure, budget, and combo opportunity cost all matter. "
+                        "You may propose original combos only when the supplied card texts and MTG rules support the loop. "
                         "Do not invent rules, do not include off-color or banned cards, and output only valid JSON."
                     ),
                 },
@@ -106,4 +118,11 @@ def fallback_plan(request: BuildRequest, commander: Card, combos: list[Combo]) -
         "combo_cards": list(dict.fromkeys(combo_cards)),
         "avoid_cards": request.avoid,
         "role_weights": {},
+        "construction_notes": [
+            "按主将文本、主题、强度和 meta 生成基础计划。",
+            "功能比例由本地构筑器按强度与 combo 偏好校正。",
+        ],
+        "combo_reasoning": [
+            "公开 combo 和本地规则型自构 combo 会在构筑阶段共同评分。",
+        ],
     }

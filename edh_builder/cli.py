@@ -10,8 +10,7 @@ from .db import init_db
 from .deck_builder import EdhDeckBuilder
 from .exporters import to_grouped_markdown, to_plain_text
 from .models import BuildRequest
-from .repository import CardRepository
-from .repository import ComboRepository
+from .repository import CardRepository, ComboRepository
 from .rules_knowledge import rules_context_for
 from .scryfall import import_oracle_cards, sync_oracle_cards
 
@@ -38,12 +37,15 @@ def main() -> None:
     search = sub.add_parser("search")
     search.add_argument("query")
     search.add_argument("--limit", type=int, default=20)
+
     combo_search = sub.add_parser("search-combos")
     combo_search.add_argument("--identity", default="")
     combo_search.add_argument("--theme", default="")
     combo_search.add_argument("--limit", type=int, default=10)
+
     estimate = sub.add_parser("estimate-deck")
     estimate.add_argument("path")
+
     rules = sub.add_parser("rules-context")
     rules.add_argument("--commander", required=True)
     rules.add_argument("--theme", default="")
@@ -96,28 +98,7 @@ def main() -> None:
             print("  Result: " + combo.result)
             print("  Tags: " + ", ".join(combo.tags[:8]))
     elif args.command == "estimate-deck":
-        repo = CardRepository()
-        total = 0.0
-        missing = []
-        text = Path(args.path).read_text(encoding="utf-8-sig")
-        if args.path.lower().endswith(".json"):
-            payload = json.loads(text)
-            text = payload.get("decklist", text)
-        for line in text.splitlines():
-            line = line.strip()
-            if not line or not line[0].isdigit():
-                continue
-            _, name = line.split(" ", 1)
-            card = repo.get_by_name(name.strip())
-            if card and card.price_usd is not None:
-                total += card.price_usd
-            else:
-                missing.append(name.strip())
-        print(f"Known USD total: {total:.2f}")
-        if missing:
-            print("Missing prices:")
-            for name in missing:
-                print(f"- {name}")
+        _estimate_deck(Path(args.path))
     elif args.command == "rules-context":
         commander = CardRepository().get_by_name(args.commander)
         if not commander:
@@ -152,6 +133,31 @@ def main() -> None:
         print(to_grouped_markdown(deck, errors, plan))
 
 
+def _estimate_deck(path: Path) -> None:
+    repo = CardRepository()
+    total = 0.0
+    missing = []
+    text = path.read_text(encoding="utf-8-sig")
+    if path.name.lower().endswith(".json"):
+        payload = json.loads(text)
+        text = payload.get("decklist", text)
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or not line[0].isdigit():
+            continue
+        _, name = line.split(" ", 1)
+        card = repo.get_by_name(name.strip())
+        if card and card.price_usd is not None:
+            total += card.price_usd
+        else:
+            missing.append(name.strip())
+    print(f"Known USD total: {total:.2f}")
+    if missing:
+        print("Missing prices:")
+        for name in missing:
+            print(f"- {name}")
+
+
 def _ask(prompt: str, default: str = "") -> str:
     suffix = f" [{default}]" if default else ""
     value = input(f"{prompt}{suffix}: ").strip()
@@ -164,7 +170,7 @@ def _run_wizard() -> BuildRequest:
     while not commander:
         commander = _ask("主将英文名", "")
     theme = _ask("核心主题/打法", "")
-    budget_raw = _ask("预算美元", "100")
+    budget_raw = _ask("预算，美元", "100")
     power_raw = _ask("目标强度 1-10", "7")
     combo_preference = _ask("combo 偏好 none/light/balanced/focused", "balanced")
     allow_infinite = _ask("是否允许无限 combo yes/no", "yes").lower() in {"y", "yes", "true", "1", "是"}
